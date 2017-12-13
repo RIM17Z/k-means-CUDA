@@ -24,14 +24,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="InputHelper.cpp" />
     <ClCompile Include="TextHelper.cpp" />
+    <ClCompile Include="UpdateStrategyCPU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraHelper.h" />
+    <ClInclude Include="IUpdateStrategy.h" />
     <ClInclude Include="KMeans.h" />
     <ClInclude Include="InputHelper.h" />
     <ClInclude Include="KMeansTypes.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TextHelper.h" />
+    <ClInclude Include="UpdateStrategyCPU.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="K-Means.rc" />

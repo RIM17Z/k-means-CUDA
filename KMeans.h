@@ -1,16 +1,20 @@
 #ifndef KMEANS_H_
 #define KMEANS_H_
 #include <GL/freeglut.h>
+#include <vector>
 #include "KMeansTypes.h"
+#include "IUpdateStrategy.h"
 
 namespace KMeans {
 	class KMeans{
 	private:
 		Pos *sums, *d_sums;
 		int *clusters_cnt, *d_clusters_cnt;
-		int V, C, original_C;
+		int V, C, original_C, currentStrategyId;
 		bool converged;
 		DataPoint *vertices, *centroids, *d_vertices, *d_centroids, *original_vertices, *original_centroids;
+
+		std::vector<IUpdateStrategy*> strategies;
 
 		static float rand_normal(float mean, float stddev);
 		void generate_set();
@@ -20,8 +24,6 @@ namespace KMeans {
 		void init();
 		void deleteVertices();
 		void deleteCentroids();
-		bool assignPoints();
-		void moveCentroids();
 		void toRGB(GLfloat h, GLfloat s, GLfloat v, GLubyte*r, GLubyte*g, GLubyte*b);
 		GLfloat hue2rgb(GLfloat p, GLfloat q, GLfloat t);
 
@@ -32,6 +34,7 @@ namespace KMeans {
 		int getC(){	return C; };
 		bool isConverged(){ return converged; };
 		bool update();
+		const char* getStrategyName();
 		~KMeans();
 	};
 
