@@ -2,115 +2,22 @@
 #include <GL/wglew.h>
 #include <GL/freeglut.h>
 #include <GL/glext.h>
+#include "CameraHelper.h"
+#include "InputHelper.h"
 #include "KMeans.h"
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-namespace km{
+namespace KMeans{
 
 	const int SCREEN_WIDTH = 800;
 	const int SCREEN_HEIGHT = 600;
 	const float CAMERA_DISTANCE = 0.5f;
-
-	typedef struct Screen{
-		int width, height;
-	} Screen;
-
-	typedef struct Mouse{
-		bool leftDown, rightDown;
-		int x, y;
-	} Mouse;
-
-	typedef struct Camera{
-		float angleX, angleY, distance;
-	} Camera;
-
-	void toOrtho(Screen *screen)
-	{
-		// set viewport to be the entire window
-		glViewport(0, 0, (GLsizei)screen->width, (GLsizei)screen->height);
-		// set orthographic viewing frustum
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		// FOV, AspectRatio, NearClip, FarClip
-		glOrtho(0, screen->width, 0, screen->height, -1, 1);
-		// switch to modelview matrix in order to set scene
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-	}
-
-	void toPerspective(Screen *screen)
-	{
-		// set viewport to be the entire window
-		glViewport(0, 0, (GLsizei)screen->width, (GLsizei)screen->height);
-		// set perspective viewing frustum
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		// FOV, AspectRatio, NearClip, FarClip
-		gluPerspective(40.0f, (float)(screen->width) / screen->height, .4f, 1000.0f);
-		// switch to modelview matrix in order to set scene
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-	}
-
-	void keyboardInput(int key, char *change){
-		switch (key)
-		{
-		case 27: // ESCAPE
-			*change = 'E';
-			break;
-		case 13: // ENTER
-			*change = 'R';
-			break;
-		default:
-			break;
-		}
-	}
-
-	void mouseInput(int button, int state, int x, int y, Mouse *mouse){
-		mouse->x = x;
-		mouse->y = y;
-		if (button == GLUT_LEFT_BUTTON)
-		{
-			if (state == GLUT_DOWN)
-			{
-				mouse->leftDown = true;
-			}
-			else if (state == GLUT_UP)
-				mouse->leftDown = false;
-		}
-	}
-
-	void mouseMove(int x, int y, Mouse *mouse, Camera *camera){
-		if (mouse->leftDown)
-		{
-			camera->angleY += (x - mouse->x);
-			camera->angleX += (y - mouse->y);
-			mouse->x = x;
-			mouse->y = y;
-		}
-	}
-
+	KMeans* kmeans;
+	GLuint VBO;
 	Screen screen = { SCREEN_WIDTH, SCREEN_HEIGHT };
 	Mouse mouse = { false, false, 0, 0 };
 	Camera camera = { 0.0f, 0.0f, CAMERA_DISTANCE };
 	char inputchange = 0;
-
-	KMeans* kmeans;
-	GLuint VBO;
-
-	void drawAxes(){
-		glBegin(GL_LINES);
-		glColor3f(1, 0, 0);
-		glVertex3f(0, 0, 0);
-		glVertex3f(2, 0, 0);
-		glColor3f(0, 1, 0);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 2, 0);
-		glColor3f(0, 0, 1);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 0, 2);
-		glEnd();
-	}
 
 	void handleInput(){
 		switch (inputchange){
@@ -125,6 +32,20 @@ namespace km{
 			break;
 		}
 		inputchange = 0;
+	}
+
+	void drawAxes(){
+		glBegin(GL_LINES);
+		glColor3f(1, 0, 0);
+		glVertex3f(0, 0, 0);
+		glVertex3f(2, 0, 0);
+		glColor3f(0, 1, 0);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 2, 0);
+		glColor3f(0, 0, 1);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, 2);
+		glEnd();
 	}
 
 	void displayCB()
@@ -144,17 +65,17 @@ namespace km{
 		kmeans->update();
 
 		glBindBufferARB(GL_ARRAY_BUFFER, VBO);
-		glBufferDataARB(GL_ARRAY_BUFFER, kmeans->V * 16, kmeans->vertices,
-			  GL_DYNAMIC_DRAW);
+		glBufferDataARB(GL_ARRAY_BUFFER, kmeans->getV() * 16, kmeans->getVertices(),
+			GL_DYNAMIC_DRAW);
 
 		// Enable Vertex and Color arrays
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 		// Set the pointers to the vertices and colors
 		glVertexPointer(3, GL_FLOAT, 16, 0);
-		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 *sizeof(GLfloat)));
-		
-		glDrawArrays(GL_POINTS, 0, kmeans->V);
+		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
+
+		glDrawArrays(GL_POINTS, 0, kmeans->getV());
 
 		glFlush();
 		glPopMatrix();
@@ -227,11 +148,11 @@ namespace km{
 		kmeans = new KMeans();
 	}
 
-} // namespace km
+} // namespace KMeans
 
 int main(int argc, char **argv)
 {
-	km::init(argc, argv);
+	KMeans::init(argc, argv);
 	glutMainLoop();
 	return 0;
 }

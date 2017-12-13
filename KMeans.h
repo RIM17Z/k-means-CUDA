@@ -2,7 +2,7 @@
 #define KMEANS_H_
 #include <GL/freeglut.h>
 
-namespace km{
+namespace KMeans {
 	typedef struct Pos {
 		GLfloat x;
 		GLfloat y;
@@ -21,6 +21,9 @@ namespace km{
 	private:
 		Pos *sums, *d_sums;
 		int *clusters_cnt, *d_clusters_cnt;
+		int V, C, original_C;
+		bool converged;
+		DataPoint *vertices, *centroids, *d_vertices, *d_centroids, *original_vertices, *original_centroids;
 
 		static float rand_normal(float mean, float stddev);
 		void generate_set();
@@ -37,13 +40,13 @@ namespace km{
 
 	public:
 		KMeans();
-		int V, C, original_C;
-		bool converged;
-		DataPoint *vertices, *centroids, *d_vertices, *d_centroids, *original_vertices, *original_centroids;
+		DataPoint* getVertices() { return vertices; };
+		int getV(){ return V; };
+		int getC(){	return C; };
 		bool update();
 		~KMeans();
 	};
 
-} // namespace km
+} // namespace KMeans
 
 #endif /* KMEANS_H_ */
