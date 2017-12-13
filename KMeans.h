@@ -1,50 +1,47 @@
 #ifndef KMEANS_H_
 #define KMEANS_H_
-#include <vector>
-#include <cstring>
 #include <GL/freeglut.h>
 
 namespace km{
+	typedef struct Pos {
+		GLfloat x;
+		GLfloat y;
+		GLfloat z;
+	};
 
-	typedef struct Pos{
-		GLfloat *x, *y, *z;
-	} Pos;
-
-	typedef struct Color{
-		GLfloat *r, *g, *b;
-	} Color;
-
-	typedef struct Points{
+	typedef struct DataPoint {
 		Pos pos;
-		Color color;
-		int *n;
-	} Points;
+		GLubyte r;
+		GLubyte g;
+		GLubyte b;
+		GLubyte n;
+	};
 
 	class KMeans{
 	private:
-		bool assignPoints(Points hv, Points hc);
-		void moveCentroids(Points hc, Pos hsums);
-		bool update(Points hv, Points hc, Pos hsums);
+		Pos *hsums, *dsums;
+		int *hccnt, *dccnt;
+
 		static float rand_normal(float mean, float stddev);
-		static void set1(Pos p, int *originalClass, int *v, int *oc, int *c);
-		Points hv, hc, dv, dc, ov, oc;
-		Pos hsums, dsums;
-		int v, c, c2;
-		bool converged;
-		GLfloat hue2rgb(GLfloat p, GLfloat q, GLfloat t);
-		void toRGB(GLfloat h, GLfloat s, GLfloat v, GLfloat*r, GLfloat*g, GLfloat*b);
-		void getForgyCentroids();
+		static void set(DataPoint *hv, DataPoint *ov, int *v, int *oc, int *c);
 		void allocateVertices();
 		void allocateCentroids();
+		void getForgyCentroids();
+		void init();
 		void deleteVertices();
 		void deleteCentroids();
-		void init();
+		bool assignPoints(DataPoint *hostPoints, DataPoint *hostCentroids);
+		void moveCentroids(DataPoint *hc, int *hccnt, Pos *hsums);
+		bool update(DataPoint *hv, DataPoint *hc, int *hccnt, Pos *hsums);
+		void toRGB(GLfloat h, GLfloat s, GLfloat v, GLubyte*r, GLubyte*g, GLubyte*b);
+		GLfloat hue2rgb(GLfloat p, GLfloat q, GLfloat t);
 
 	public:
 		KMeans();
-		int getC() { return c; }
+		int v, c, c2;
+		bool converged;
+		DataPoint *hv, *hc, *dv, *dc, *ov, *oc;
 		void update();
-		void draw();
 		~KMeans();
 	};
 
