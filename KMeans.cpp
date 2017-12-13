@@ -3,7 +3,7 @@
 #include <cmath>
 namespace km {
 
-	const int CLUSTERS_CNT = 4;
+	const int NUM_CLUSTERS = 4;
 
   float KMeans::rand_normal(float mean, float stddev) {
     static float n2 = 0.0;
@@ -30,77 +30,77 @@ namespace km {
     }
   }
 
-  void KMeans::set(DataPoint *hv, DataPoint *ov, int *v, int *c2, int *c) {
+  void KMeans::generate_set() {
     srand((unsigned int)time(0));
     float cx, cy, cz;
-    int currentClass = -1;
-	*c2 = CLUSTERS_CNT;
-    for (int i = 0; i < *v; ++i) {
-      if (i % (*v / 4) == 0) {
+    int current_cluster = -1;
+	original_C = NUM_CLUSTERS;
+    for (int i = 0; i < V; ++i) {
+		if (i % (V / NUM_CLUSTERS) == 0) {
         cx = (float)(rand()%1000)/1000;
         cy = (float)(rand()%1000)/1000;
         cz = (float)(rand()%1000)/1000;
-        currentClass++;
+		current_cluster++;
       }
-      hv[i].pos.x = cx + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
-      hv[i].pos.y = cy + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
-      hv[i].pos.z = cz + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
-      ov[i].n = currentClass;
+      vertices[i].pos.x = cx + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
+      vertices[i].pos.y = cy + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
+	  vertices[i].pos.z = cz + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
+	  original_vertices[i].cluster_id = current_cluster;
     }
   }
 
   KMeans::KMeans() {
-    v = 1000000;
-    c = 4;
+    V = 1000000;
+	C = NUM_CLUSTERS;
     allocateVertices();
-    set(hv, ov, &v, &c2, &c);
+    generate_set();
     init();
   }
 
 
   void KMeans::allocateVertices() {
     // vertices
-    hv = new DataPoint[v];
+    vertices = new DataPoint[V];
     // vertex assignment
-	ov = new DataPoint[v];
+	original_vertices = new DataPoint[V];
   }
 
   void KMeans::allocateCentroids() {
     // centroids
-    hc = new DataPoint[c];
-    hsums = new Pos[c];
-	hccnt = new int[c];
+    centroids = new DataPoint[C];
+    sums = new Pos[C];
+	clusters_cnt = new int[C];
   }
 
   void KMeans::getForgyCentroids() {
 	  srand((unsigned int)time(0));
-	  for (int i = 0; i < c; i++) {
-		  int index = rand() % v;
-		  hc[i].pos.x = hv[index].pos.x;
-		  hc[i].pos.y = hv[index].pos.y;
-		  hc[i].pos.z = hv[index].pos.z;
-		  GLfloat h = (float)(i) / (float)(c);
-		  toRGB(h, 1, 0.5, &hc[i].r, &hc[i].g, &hc[i].b);
+	  for (int i = 0; i < C; i++) {
+		  int index = rand() % V;
+		  centroids[i].pos.x = vertices[index].pos.x;
+		  centroids[i].pos.y = vertices[index].pos.y;
+		  centroids[i].pos.z = vertices[index].pos.z;
+		  GLfloat h = (float)(i) / (float)(C);
+		  toRGB(h, 1, 0.5, &centroids[i].r, &centroids[i].g, &centroids[i].b);
 	  }
   }
 
   void KMeans::init() {
     converged = false;
     allocateCentroids();
-    for (int i = 0; i < v; ++i)
-      hv[i].n = 255;
+    for (int i = 0; i < V; ++i)
+      vertices[i].cluster_id = 255;
     getForgyCentroids();
   }
 
   void KMeans::deleteVertices() {
-    delete [] hv;
-    delete [] ov;
+    delete [] vertices;
+    delete [] original_vertices;
   }
 
   void KMeans::deleteCentroids() {
-    delete [] hc;
-	delete [] hsums;
-	delete [] hccnt;
+    delete [] centroids;
+	delete [] sums;
+	delete [] clusters_cnt;
   }
 
   KMeans::~KMeans() {
@@ -108,67 +108,64 @@ namespace km {
     deleteVertices();
   }
 
-  void KMeans::update() {
-    if (converged)
-      return;
-    converged = update(hv, hc, hccnt, hsums);
-  }
 
-  bool KMeans::update(DataPoint *hv, DataPoint *hc, int *hccnt, Pos *hsums){
-	  bool converged = assignPoints(hv, hc);
-	  memset(hsums, 0, c * sizeof(Pos));
-	  for (int i = 0; i < c; ++i)
-		  hccnt[i] = 0;
-	  
-	  for (int i = 0; i < v; ++i){
+  bool KMeans::update(){
+	  if (converged)
+		  return true;
+	  converged = assignPoints();
+	  memset(sums, 0, C * sizeof(Pos));
+	  for (int i = 0; i < C; ++i)
+		  clusters_cnt[i] = 0;
+
+	  for (int i = 0; i < V; ++i){
 		  //update distance sums and point counts for each group
-		  int a = hv[i].n;
-		  hsums[a].x += hv[i].pos.x;
-		  hsums[a].y += hv[i].pos.y;
-		  hsums[a].z += hv[i].pos.z;
-		  ++hccnt[a];
+		  int id = vertices[i].cluster_id;
+		  sums[id].x += vertices[i].pos.x;
+		  sums[id].y += vertices[i].pos.y;
+		  sums[id].z += vertices[i].pos.z;
+		  ++clusters_cnt[id];
 	  }
 
-	  moveCentroids(hc, hccnt, hsums);
+	  moveCentroids();
 	  return converged;
   }
 
-  bool KMeans::assignPoints(DataPoint *hv, DataPoint *hc){
+  bool KMeans::assignPoints(){
 	  bool converged = true;
-	  for (int i = 0; i < v; ++i)
+	  for (int i = 0; i < V; ++i)
 	  {
-		  float distx = hc[0].pos.x - hv[i].pos.x;
-		  float disty = hc[0].pos.y - hv[i].pos.y;
-		  float distz = hc[0].pos.z - hv[i].pos.z;
+		  float distx = centroids[0].pos.x - vertices[i].pos.x;
+		  float disty = centroids[0].pos.y - vertices[i].pos.y;
+		  float distz = centroids[0].pos.z - vertices[i].pos.z;
 		  float distold = (distx * distx + disty * disty + distz * distz);
 		  int a = 0;
-		  for (int j = 1; j < c; ++j){
-			  float tmpx = hc[j].pos.x - hv[i].pos.x;
-			  float tmpy = hc[j].pos.y - hv[i].pos.y;
-			  float tmpz = hc[j].pos.z - hv[i].pos.z;
+		  for (int j = 1; j < C; ++j){
+			  float tmpx = centroids[j].pos.x - vertices[i].pos.x;
+			  float tmpy = centroids[j].pos.y - vertices[i].pos.y;
+			  float tmpz = centroids[j].pos.z - vertices[i].pos.z;
 			  float distnew = (tmpx * tmpx + tmpy * tmpy + tmpz * tmpz);
 			  if (distold > distnew){
 				  a = j;
 				  distold = distnew;
 			  }
 		  }
-		  if (hv[i].n != a){
-			  hv[i].n = a;
-			  hv[i].r = hc[a].r;
-			  hv[i].g = hc[a].g;
-			  hv[i].b = hc[a].b;
+		  if (vertices[i].cluster_id != a){
+			  vertices[i].cluster_id = a;
+			  vertices[i].r = centroids[a].r;
+			  vertices[i].g = centroids[a].g;
+			  vertices[i].b = centroids[a].b;
 			  converged = false;
 		  }
 	  }
 	  return converged;
   }
 
-  void KMeans::moveCentroids(DataPoint *hc, int *hccnt, Pos *hsums){
-	  for (int j = 0; j < c; ++j){
-		  if (hccnt[j] != 0){
-			  hc[j].pos.x = hsums[j].x / (GLfloat)hccnt[j];
-			  hc[j].pos.y = hsums[j].y / (GLfloat)hccnt[j];
-			  hc[j].pos.z = hsums[j].z / (GLfloat)hccnt[j];
+  void KMeans::moveCentroids(){
+	  for (int j = 0; j < C; ++j){
+		  if (clusters_cnt[j] != 0){
+			  centroids[j].pos.x = sums[j].x / (GLfloat)clusters_cnt[j];
+			  centroids[j].pos.y = sums[j].y / (GLfloat)clusters_cnt[j];
+			  centroids[j].pos.z = sums[j].z / (GLfloat)clusters_cnt[j];
 		  }
 	  }
   }

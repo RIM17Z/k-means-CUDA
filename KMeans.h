@@ -14,34 +14,33 @@ namespace km{
 		GLubyte r;
 		GLubyte g;
 		GLubyte b;
-		GLubyte n;
+		GLubyte cluster_id;
 	};
 
 	class KMeans{
 	private:
-		Pos *hsums, *dsums;
-		int *hccnt, *dccnt;
+		Pos *sums, *d_sums;
+		int *clusters_cnt, *d_clusters_cnt;
 
 		static float rand_normal(float mean, float stddev);
-		static void set(DataPoint *hv, DataPoint *ov, int *v, int *oc, int *c);
+		void generate_set();
 		void allocateVertices();
 		void allocateCentroids();
 		void getForgyCentroids();
 		void init();
 		void deleteVertices();
 		void deleteCentroids();
-		bool assignPoints(DataPoint *hostPoints, DataPoint *hostCentroids);
-		void moveCentroids(DataPoint *hc, int *hccnt, Pos *hsums);
-		bool update(DataPoint *hv, DataPoint *hc, int *hccnt, Pos *hsums);
+		bool assignPoints();
+		void moveCentroids();
 		void toRGB(GLfloat h, GLfloat s, GLfloat v, GLubyte*r, GLubyte*g, GLubyte*b);
 		GLfloat hue2rgb(GLfloat p, GLfloat q, GLfloat t);
 
 	public:
 		KMeans();
-		int v, c, c2;
+		int V, C, original_C;
 		bool converged;
-		DataPoint *hv, *hc, *dv, *dc, *ov, *oc;
-		void update();
+		DataPoint *vertices, *centroids, *d_vertices, *d_centroids, *original_vertices, *original_centroids;
+		bool update();
 		~KMeans();
 	};
 

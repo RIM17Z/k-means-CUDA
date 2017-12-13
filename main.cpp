@@ -144,7 +144,7 @@ namespace km{
 		kmeans->update();
 
 		glBindBufferARB(GL_ARRAY_BUFFER, VBO);
-		glBufferDataARB(GL_ARRAY_BUFFER, kmeans->v * 16, kmeans->hv,
+		glBufferDataARB(GL_ARRAY_BUFFER, kmeans->V * 16, kmeans->vertices,
 			  GL_DYNAMIC_DRAW);
 
 		// Enable Vertex and Color arrays
@@ -154,7 +154,7 @@ namespace km{
 		glVertexPointer(3, GL_FLOAT, 16, 0);
 		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 *sizeof(GLfloat)));
 		
-		glDrawArrays(GL_POINTS, 0, kmeans->v);
+		glDrawArrays(GL_POINTS, 0, kmeans->V);
 
 		glFlush();
 		glPopMatrix();
