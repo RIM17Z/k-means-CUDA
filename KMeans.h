@@ -43,6 +43,7 @@ namespace KMeans {
 		DataPoint* getVertices() { return vertices; };
 		int getV(){ return V; };
 		int getC(){	return C; };
+		bool isConverged(){ return converged; };
 		bool update();
 		~KMeans();
 	};
