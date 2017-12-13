@@ -3,6 +3,7 @@
 #include <GL/freeglut.h>
 #include <GL/glext.h>
 #include <iostream>
+#include "KMeansTypes.h"
 #include "CameraHelper.h"
 #include "InputHelper.h"
 #include "TextHelper.h"
@@ -61,6 +62,9 @@ namespace KMeans{
 	const int TEXT_WIDTH = 8;
 	const int TEXT_HEIGHT = 13;
 	const float CAMERA_DISTANCE = 0.5f;
+	static int frameCount = 0;
+	static std::string fps = "0.0 FPS";
+	static int previousTime = 0;
 	KMeans* kmeans;
 	GLuint VBO;
 	Screen screen = { SCREEN_WIDTH, SCREEN_HEIGHT };
@@ -100,20 +104,16 @@ namespace KMeans{
 		glEnd();
 	}
 
-
-	void showFPS(int textWidth, int textHeight, Screen screen)
+	void showInfo()
 	{
-		static int frameCount = 0;
-		static std::string fps = "0.0 FPS";
-		static int previousTime = 0;
-
+		std::string text;
 		// backup current model-view matrix
-		glPushMatrix();                     // save current modelview matrix
-		glLoadIdentity();                   // reset modelview matrix
+		glPushMatrix();                 // save current modelview matrix
+		glLoadIdentity();               // reset modelview matrix
 		// set to 2D orthogonal projection
-		glMatrixMode(GL_PROJECTION);        // switch to projection matrix
-		glPushMatrix();                     // save current projection matrix
-		glLoadIdentity();                   // reset projection matrix
+		glMatrixMode(GL_PROJECTION);    // switch to projection matrix
+		glPushMatrix();                 // save current projection matrix
+		glLoadIdentity();               // reset projection matrix
 		gluOrtho2D(0, screen.width, 0, screen.height); // set to orthogonal projection
 
 		frameCount++;
@@ -127,27 +127,8 @@ namespace KMeans{
 			previousTime = currentTime;
 			frameCount = 0;
 		}
-		drawText(fps.c_str(), screen.width - fps.size()*textWidth,
-			screen.height - textHeight);
-
-		// restore projection matrix
-		glPopMatrix();                      // restore to previous projection matrix
-		// restore modelview matrix
-		glMatrixMode(GL_MODELVIEW);         // switch to modelview matrix
-		glPopMatrix();                      // restore to previous modelview matrix
-	}
-
-	void showInfo()
-	{
-		std::string text;
-		// backup current model-view matrix
-		glPushMatrix();                 // save current modelview matrix
-		glLoadIdentity();               // reset modelview matrix
-		// set to 2D orthogonal projection
-		glMatrixMode(GL_PROJECTION);    // switch to projection matrix
-		glPushMatrix();                 // save current projection matrix
-		glLoadIdentity();               // reset projection matrix
-		gluOrtho2D(0, screen.width, 0, screen.height); // set to orthogonal projection
+		drawText(fps.c_str(), screen.width - fps.size()*(TEXT_WIDTH),
+			screen.height - TEXT_HEIGHT);
 
 		int line = screen.height - 2 * TEXT_HEIGHT;
 		text = "Updating Time: " + to_string(updateTime) + " ms";
@@ -172,6 +153,7 @@ namespace KMeans{
 		line = TEXT_HEIGHT;
 		text = "Press ENTER to rerun clustering.";
 		drawText(text.c_str(), 1, line);
+
 
 		// restore projection matrix
 		glPopMatrix();                   // restore to previous projection matrix
@@ -215,7 +197,6 @@ namespace KMeans{
 		updateTime = elapsed_time(t1, t2);
 		drawTime = elapsed_time(t2, t3);
 		showInfo();
-		showFPS(TEXT_WIDTH, TEXT_HEIGHT, screen);
 
 		glFlush();
 		glPopMatrix();

@@ -1,22 +1,9 @@
 #ifndef KMEANS_H_
 #define KMEANS_H_
 #include <GL/freeglut.h>
+#include "KMeansTypes.h"
 
 namespace KMeans {
-	typedef struct Pos {
-		GLfloat x;
-		GLfloat y;
-		GLfloat z;
-	};
-
-	typedef struct DataPoint {
-		Pos pos;
-		GLubyte r;
-		GLubyte g;
-		GLubyte b;
-		GLubyte cluster_id;
-	};
-
 	class KMeans{
 	private:
 		Pos *sums, *d_sums;
