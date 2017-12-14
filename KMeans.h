@@ -8,8 +8,6 @@
 namespace KMeans {
 	class KMeans{
 	private:
-		Pos *sums, *d_sums;
-		int *clusters_cnt, *d_clusters_cnt;
 		int V, C, original_C, currentStrategyId;
 		bool converged;
 		DataPoint *vertices, *centroids, *d_vertices, *d_centroids, *original_vertices, *original_centroids;
@@ -29,7 +27,7 @@ namespace KMeans {
 
 	public:
 		KMeans();
-		DataPoint* getVertices() { return vertices; };
+		const DataPoint* getVertices() { return strategies[currentStrategyId]->getVertices(); };
 		int getV(){ return V; };
 		int getC(){	return C; };
 		bool isConverged(){ return converged; };

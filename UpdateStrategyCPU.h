@@ -7,13 +7,16 @@ namespace KMeans {
 
 	class UpdateStrategyCPU : public IUpdateStrategy{
 	private:
-		bool assignPoints(int V, int C, DataPoint* vertices, DataPoint* centroids);
-		void moveCentroids(int C, DataPoint* centroids, Pos* sums, int* clusters_cnt);
+		Pos* sums;
+		int *clusters_cnt;
+		bool assignPoints();
+		void sumClusters();
+		void moveCentroids();
 	public:
-		UpdateStrategyCPU();
+		UpdateStrategyCPU(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids);
 		~UpdateStrategyCPU();
 		const char* getStrategyName() { return "CPU"; };
-		bool update(int V, int C, DataPoint* vertices, DataPoint* centroids, Pos* sums, int* clusters_cnt);
+		bool update();
 	};
 
 } // namespace KMeans

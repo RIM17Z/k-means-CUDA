@@ -62,7 +62,6 @@ namespace KMeans {
 		init();
 	}
 
-
 	const char* KMeans::getStrategyName() {
 		return strategies[currentStrategyId]->getStrategyName();
 	}
@@ -77,8 +76,6 @@ namespace KMeans {
 	void KMeans::allocateCentroids() {
 		// centroids
 		centroids = new DataPoint[C];
-		sums = new Pos[C];
-		clusters_cnt = new int[C];
 	}
 
 	void KMeans::getForgyCentroids() {
@@ -99,7 +96,7 @@ namespace KMeans {
 		for (int i = 0; i < V; ++i)
 			vertices[i].cluster_id = 255;
 		getForgyCentroids();
-		strategies.push_back(new UpdateStrategyCPU());
+		strategies.push_back(new UpdateStrategyCPU(V, C, vertices, centroids));
 #ifdef __NVCC__
 		strategies.push_back(new UpdateStrategyGPU(v, c, hv, hc, hsums));
 #endif
@@ -113,22 +110,20 @@ namespace KMeans {
 
 	void KMeans::deleteCentroids() {
 		delete[] centroids;
-		delete[] sums;
-		delete[] clusters_cnt;
 	}
 
 	KMeans::~KMeans() {
-		deleteCentroids();
-		deleteVertices();
 		for (int i = 0; i < strategies.size(); ++i)
 			delete strategies[i];
+		deleteCentroids();
+		deleteVertices();
 	}
 
 
 	bool KMeans::update(){
 		if (converged)
 			return true;
-		converged = strategies[currentStrategyId]->update(V, C, vertices, centroids, sums, clusters_cnt);
+		converged = strategies[currentStrategyId]->update();
 		return converged;
 	}
 

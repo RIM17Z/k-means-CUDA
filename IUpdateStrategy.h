@@ -6,10 +6,13 @@ namespace KMeans {
 
 	class IUpdateStrategy{
 	protected:
-		IUpdateStrategy(){};
+		const int V, C;
+		DataPoint *vertices, *centroids;
+		IUpdateStrategy(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids) : V(_V), C(_C), vertices(_vertices), centroids(_centroids) {};
 	public:
 		virtual const char* getStrategyName() = 0;
-		virtual bool update(int V, int C, DataPoint* hv, DataPoint* hc, Pos* sums, int* clusters_cnt) = 0;
+		virtual bool update() = 0;
+		virtual const DataPoint* getVertices() { return vertices; };
 	};
 
 } // namespace KMeans

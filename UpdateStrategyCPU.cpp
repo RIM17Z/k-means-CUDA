@@ -1,30 +1,24 @@
 #include "UpdateStrategyCPU.h"
 namespace KMeans {
 
-	UpdateStrategyCPU::UpdateStrategyCPU() : IUpdateStrategy() { }
+	UpdateStrategyCPU::UpdateStrategyCPU(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids) : IUpdateStrategy(_V, _C, _vertices, _centroids) {
+		sums = new Pos[C];
+		clusters_cnt = new int[C];
+	}
 
-	UpdateStrategyCPU::~UpdateStrategyCPU(){ }
+	UpdateStrategyCPU::~UpdateStrategyCPU(){
+		delete[] sums;
+		delete[] clusters_cnt;
+	}
 
-	bool UpdateStrategyCPU::update(int V, int C, DataPoint* vertices, DataPoint* centroids, Pos* sums, int* clusters_cnt){
-		bool converged = assignPoints(V, C, vertices, centroids);
-		memset(sums, 0, C * sizeof(Pos));
-		for (int i = 0; i < C; ++i)
-			clusters_cnt[i] = 0;
-
-		for (int i = 0; i < V; ++i){
-			//update distance sums and point counts for each group
-			int id = vertices[i].cluster_id;
-			sums[id].x += vertices[i].pos.x;
-			sums[id].y += vertices[i].pos.y;
-			sums[id].z += vertices[i].pos.z;
-			++clusters_cnt[id];
-		}
-
-		moveCentroids(C, centroids, sums, clusters_cnt);
+	bool UpdateStrategyCPU::update(){
+		bool converged = assignPoints();
+		sumClusters();
+		moveCentroids();
 		return converged;
 	}
 
-	bool UpdateStrategyCPU::assignPoints(int V, int C, DataPoint* vertices, DataPoint* centroids){
+	bool UpdateStrategyCPU::assignPoints(){
 		bool converged = true;
 		for (int i = 0; i < V; ++i)
 		{
@@ -54,8 +48,22 @@ namespace KMeans {
 		return converged;
 	}
 
+	void UpdateStrategyCPU::sumClusters(){
+		memset(sums, 0, C * sizeof(Pos));
+		for (int i = 0; i < C; ++i)
+			clusters_cnt[i] = 0;
 
-	void UpdateStrategyCPU::moveCentroids(int C, DataPoint* centroids, Pos* sums, int* clusters_cnt){
+		for (int i = 0; i < V; ++i){
+			//update distance sums and point counts for each group
+			int id = vertices[i].cluster_id;
+			sums[id].x += vertices[i].pos.x;
+			sums[id].y += vertices[i].pos.y;
+			sums[id].z += vertices[i].pos.z;
+			++clusters_cnt[id];
+		}
+	}
+
+	void UpdateStrategyCPU::moveCentroids(){
 		for (int j = 0; j < C; ++j){
 			if (clusters_cnt[j] != 0){
 				centroids[j].pos.x = sums[j].x / (GLfloat)clusters_cnt[j];

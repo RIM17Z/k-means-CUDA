@@ -32,12 +32,8 @@
     <ClInclude Include="KMeans.h" />
     <ClInclude Include="InputHelper.h" />
     <ClInclude Include="KMeansTypes.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="TextHelper.h" />
     <ClInclude Include="UpdateStrategyCPU.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="K-Means.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{823CC0F1-EA03-4C36-921D-E22ACBCF1395}</ProjectGuid>
