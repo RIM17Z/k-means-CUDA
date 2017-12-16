@@ -3,6 +3,7 @@
 #include <GL/freeglut.h>
 #include <GL/glext.h>
 #include <iostream>
+
 #include "KMeansTypes.h"
 #include "CameraHelper.h"
 #include "InputHelper.h"
@@ -66,7 +67,11 @@ namespace KMeans{
 	static std::string fps = "0.0 FPS";
 	static int previousTime = 0;
 	KMeans* kmeans;
-	GLuint VBO;
+
+	// vbo variables
+	GLuint VBOS[2];
+
+
 	Screen screen = { SCREEN_WIDTH, SCREEN_HEIGHT };
 	Mouse mouse = { false, false, 0, 0 };
 	Camera camera = { 0.0f, 0.0f, CAMERA_DISTANCE };
@@ -82,7 +87,9 @@ namespace KMeans{
 			break;
 		case 'R':
 			delete kmeans;
-			kmeans = new KMeans();
+			glDeleteBuffers(2, VBOS);
+			glGenBuffers(2, VBOS);
+			kmeans = new KMeans(VBOS);
 			break;
 		default:
 			break;
@@ -166,7 +173,15 @@ namespace KMeans{
 	{
 		handleInput();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		timer(&t1); //--------------------------------------------
+
+		kmeans->update();
+
+
+		timer(&t2); //--------------------------------------------
+
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glPushMatrix();
 		glTranslatef(0, 0, -camera.distance);
 		gluLookAt(3, 2, 3, 0, 0.5, -0.5, 0, 1, 0);
@@ -176,22 +191,32 @@ namespace KMeans{
 
 		drawAxes();
 
-		timer(&t1); //--------------------------------------------
-		kmeans->update();
-		timer(&t2); //--------------------------------------------
 
-		glBindBufferARB(GL_ARRAY_BUFFER, VBO);
-		glBufferDataARB(GL_ARRAY_BUFFER, kmeans->getV() * 16, kmeans->getVertices(),
-			GL_DYNAMIC_DRAW);
-
-		// Enable Vertex and Color arrays
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
+		glBindBuffer(GL_ARRAY_BUFFER, VBOS[0]);
 		// Set the pointers to the vertices and colors
 		glVertexPointer(3, GL_FLOAT, 16, 0);
 		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
 
+		// Enable Vertex and Color arrays
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
 		glDrawArrays(GL_POINTS, 0, kmeans->getV());
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+
+		glPointSize(10);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBOS[1]);
+		// Set the pointers to the vertices and colors
+		glVertexPointer(3, GL_FLOAT, 16, 0);
+		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
+
+		// Enable Vertex and Color arrays
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glDrawArrays(GL_POINTS, 0, kmeans->getC());
+		glDisableClientState(GL_VERTEX_ARRAY);
+		
 		timer(&t3); //--------------------------------------------
 
 		updateTime = elapsed_time(t1, t2);
@@ -239,7 +264,8 @@ namespace KMeans{
 	void exitCB()
 	{
 		delete kmeans;
-		glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(2, VBOS);
+
 	}
 
 	void init(int argc, char **argv)
@@ -265,8 +291,10 @@ namespace KMeans{
 		glClearColor(0, 0, 0, 0);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
-		glGenBuffers(1, &VBO);
-		kmeans = new KMeans();
+		glGenBuffers(2, VBOS);
+
+		kmeans = new KMeans(VBOS);
+
 	}
 
 } // namespace KMeans

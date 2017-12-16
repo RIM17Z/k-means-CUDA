@@ -10,7 +10,7 @@ namespace KMeans {
 	private:
 		int V, C, original_C, currentStrategyId;
 		bool converged;
-		DataPoint *vertices, *centroids, *d_vertices, *d_centroids, *original_vertices, *original_centroids;
+		DataPoint *vertices, *centroids, *original_vertices, *original_centroids;
 
 		std::vector<IUpdateStrategy*> strategies;
 
@@ -19,15 +19,15 @@ namespace KMeans {
 		void allocateVertices();
 		void allocateCentroids();
 		void getForgyCentroids();
-		void init();
+		void init(GLuint *VBOS);
 		void deleteVertices();
 		void deleteCentroids();
 		void toRGB(GLfloat h, GLfloat s, GLfloat v, GLubyte*r, GLubyte*g, GLubyte*b);
 		GLfloat hue2rgb(GLfloat p, GLfloat q, GLfloat t);
 
 	public:
-		KMeans();
-		const DataPoint* getVertices() { return strategies[currentStrategyId]->getVertices(); };
+		KMeans(GLuint* VBOS);
+		DataPoint* getVertices() { return strategies[currentStrategyId]->getVertices(); };
 		int getV(){ return V; };
 		int getC(){	return C; };
 		bool isConverged(){ return converged; };

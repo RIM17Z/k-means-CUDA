@@ -25,6 +25,7 @@
     <ClCompile Include="InputHelper.cpp" />
     <ClCompile Include="TextHelper.cpp" />
     <ClCompile Include="UpdateStrategyCPU.cpp" />
+    <ClCompile Include="UpdateStrategyCUDA.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraHelper.h" />
@@ -34,6 +35,12 @@
     <ClInclude Include="KMeansTypes.h" />
     <ClInclude Include="TextHelper.h" />
     <ClInclude Include="UpdateStrategyCPU.h" />
+    <ClInclude Include="UpdateStrategyCUDA.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="kernel.cu">
+      <FileType>CppCode</FileType>
+    </CudaCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{823CC0F1-EA03-4C36-921D-E22ACBCF1395}</ProjectGuid>
@@ -88,12 +95,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(NVCUDASAMPLES_ROOT)/common/inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(NVCUDASAMPLES_ROOT)/common/inc</IncludePath>
     <LibraryPath>$(NVCUDASAMPLES_ROOT)/common/lib/x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(NVCUDASAMPLES_ROOT)/common/inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(NVCUDASAMPLES_ROOT)/common/inc</IncludePath>
     <LibraryPath>$(NVCUDASAMPLES_ROOT)/common/lib/x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -121,7 +128,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
@@ -164,7 +171,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cudart.lib;freeglut.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"

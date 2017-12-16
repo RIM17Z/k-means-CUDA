@@ -1,9 +1,9 @@
 #include "KMeans.h"
 #include <time.h>
 #include <cmath>
-#ifdef __NVCC__
-#include "UpdateStrategyGPU.h"
-#endif
+//#ifdef __CUDACC__
+#include "UpdateStrategyCUDA.h"
+//#endif
 #include "UpdateStrategyCPU.h"
 
 namespace KMeans {
@@ -50,16 +50,19 @@ namespace KMeans {
 			vertices[i].pos.x = cx + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
 			vertices[i].pos.y = cy + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
 			vertices[i].pos.z = cz + rand_normal(.0f, .1f + (float)(rand() % 100) / 1000);
+			vertices[i].r = (GLubyte)100;
+			vertices[i].g = (GLubyte)100;
+			vertices[i].b = (GLubyte)100;
 			original_vertices[i].cluster_id = current_cluster;
 		}
 	}
 
-	KMeans::KMeans() {
+	KMeans::KMeans(GLuint* VBOS) {
 		V = 1000000;
 		C = NUM_CLUSTERS;
 		allocateVertices();
 		generate_set();
-		init();
+		init(VBOS);
 	}
 
 	const char* KMeans::getStrategyName() {
@@ -85,22 +88,24 @@ namespace KMeans {
 			centroids[i].pos.x = vertices[index].pos.x;
 			centroids[i].pos.y = vertices[index].pos.y;
 			centroids[i].pos.z = vertices[index].pos.z;
+			centroids[i].cluster_id = i;
 			GLfloat h = (float)(i) / (float)(C);
 			toRGB(h, 1, 0.5, &centroids[i].r, &centroids[i].g, &centroids[i].b);
 		}
 	}
 
-	void KMeans::init() {
+	void KMeans::init(GLuint *VBOS) {
 		converged = false;
 		allocateCentroids();
 		for (int i = 0; i < V; ++i)
 			vertices[i].cluster_id = 255;
 		getForgyCentroids();
-		strategies.push_back(new UpdateStrategyCPU(V, C, vertices, centroids));
-#ifdef __NVCC__
-		strategies.push_back(new UpdateStrategyGPU(v, c, hv, hc, hsums));
-#endif
-		currentStrategyId = 0;
+
+		strategies.push_back(new UpdateStrategyCPU(V, C, vertices, centroids, &VBOS[0], &VBOS[1]));
+//#ifdef __CUDACC__
+		strategies.push_back(new UpdateStrategyCUDA(V, C, vertices, centroids, &VBOS[0], &VBOS[1]));
+//#endif
+		currentStrategyId = 1;
 	}
 
 	void KMeans::deleteVertices() {

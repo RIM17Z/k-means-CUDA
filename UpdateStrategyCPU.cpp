@@ -1,7 +1,7 @@
 #include "UpdateStrategyCPU.h"
 namespace KMeans {
 
-	UpdateStrategyCPU::UpdateStrategyCPU(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids) : IUpdateStrategy(_V, _C, _vertices, _centroids) {
+	UpdateStrategyCPU::UpdateStrategyCPU(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids, GLuint *_VBO, GLuint *_VBO2) : IUpdateStrategy(_V, _C, _vertices, _centroids, _VBO, _VBO2) {
 		sums = new Pos[C];
 		clusters_cnt = new int[C];
 	}
