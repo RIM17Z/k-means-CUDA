@@ -1,4 +1,12 @@
+
+#include <GL/glew.h>
+#include <GL/wglew.h>
+#include <GL/freeglut.h>
+#include <GL/glext.h>
 #include "UpdateStrategyCPU.h"
+
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 namespace KMeans {
 
 	UpdateStrategyCPU::UpdateStrategyCPU(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids, GLuint *_VBO, GLuint *_VBO2) : IUpdateStrategy(_V, _C, _vertices, _centroids, _VBO, _VBO2) {
@@ -74,6 +82,37 @@ namespace KMeans {
 	}
 
 	void UpdateStrategyCPU::draw(){
+		glPointSize(1);
+
+		glBindBufferARB(GL_ARRAY_BUFFER, *VBO);
+		glBufferDataARB(GL_ARRAY_BUFFER, V * 16, vertices,
+			GL_DYNAMIC_DRAW);
+
+		// Enable Vertex and Color arrays
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		// Set the pointers to the vertices and colors
+		glVertexPointer(3, GL_FLOAT, 16, 0);
+		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
+		glDrawArrays(GL_POINTS, 0, V);
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+		glPointSize(10);
+
+		glBindBuffer(GL_ARRAY_BUFFER, *VBO2);
+		glBufferDataARB(GL_ARRAY_BUFFER, C * 16, centroids,
+			GL_DYNAMIC_DRAW);
+		// Enable Vertex and Color arrays
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		// Set the pointers to the vertices and colors
+		glVertexPointer(3, GL_FLOAT, 16, 0);
+		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
+		glDrawArrays(GL_POINTS, 0, C);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+
+	void UpdateStrategyCPU::resetCentroids(int C, DataPoint *_centroids){
 
 	}
 }

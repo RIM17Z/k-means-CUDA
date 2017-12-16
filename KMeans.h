@@ -32,7 +32,8 @@ namespace KMeans {
 		bool isConverged(){ return converged; };
 		bool update();
 		void draw();
-		const char* getStrategyName();
+		const char* getStrategyName(); 
+		void changeStrategy();
 		~KMeans();
 	};
 

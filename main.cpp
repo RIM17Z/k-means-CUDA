@@ -84,6 +84,9 @@ namespace KMeans{
 		case 'E':
 			glutLeaveMainLoop();
 			break;
+		case 1:
+			kmeans->changeStrategy();
+			break;
 		case 'R':
 			delete kmeans;
 			glDeleteBuffers(2, VBOS);
@@ -136,7 +139,12 @@ namespace KMeans{
 		drawText(fps.c_str(), screen.width - fps.size()*(TEXT_WIDTH),
 			screen.height - TEXT_HEIGHT);
 
+
 		int line = screen.height - 2 * TEXT_HEIGHT;
+		text = kmeans->getStrategyName();
+		drawText(text.c_str(), 1, line);
+
+		line -= TEXT_HEIGHT;
 		text = "Updating Time: " + to_string(updateTime) + " ms";
 		drawText(text.c_str(), 1, line);
 

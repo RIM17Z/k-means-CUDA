@@ -32,6 +32,9 @@ namespace KMeans{
 		case 27: // ESCAPE
 			*change = 'E';
 			break;
+		case ' ':
+			*change = 1;
+			break;
 		case 13: // ENTER
 			*change = 'R';
 			break;

@@ -105,7 +105,7 @@ namespace KMeans {
 //#ifdef __CUDACC__
 		strategies.push_back(new UpdateStrategyCUDA(V, C, vertices, centroids, &VBOS[0], &VBOS[1]));
 //#endif
-		currentStrategyId = 1;
+		currentStrategyId = 0;
 	}
 
 	void KMeans::deleteVertices() {
@@ -134,6 +134,17 @@ namespace KMeans {
 
 	void KMeans::draw(){
 		strategies[currentStrategyId]->draw();
+	}
+
+	void KMeans::changeStrategy() {
+		converged = false;
+		for (int i = 0; i < V; i++)
+			vertices[i].cluster_id = 255;
+		getForgyCentroids();
+		for (int i = 0; i < strategies.size(); ++i)
+			strategies[i]->resetCentroids(C, centroids);
+		currentStrategyId++;
+		if (currentStrategyId == strategies.size()) currentStrategyId = 0;
 	}
 
 	//color space conversion
