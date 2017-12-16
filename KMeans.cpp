@@ -132,6 +132,10 @@ namespace KMeans {
 		return converged;
 	}
 
+	void KMeans::draw(){
+		strategies[currentStrategyId]->draw();
+	}
+
 	//color space conversion
 
 	GLfloat KMeans::hue2rgb(GLfloat p, GLfloat q, GLfloat t) {

@@ -16,8 +16,8 @@ namespace KMeans {
 		UpdateStrategyCPU(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids, GLuint *_VBO, GLuint *_VBO2);
 		~UpdateStrategyCPU();
 		const char* getStrategyName() { return "CPU"; };
-		virtual DataPoint* getVertices() { return vertices; };
 		bool update();
+		void draw();
 	};
 
 } // namespace KMeans

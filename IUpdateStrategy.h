@@ -13,7 +13,7 @@ namespace KMeans {
 	public:
 		virtual const char* getStrategyName() = 0;
 		virtual bool update() = 0;
-		virtual DataPoint* getVertices() = 0;
+		virtual void draw() = 0;
 	};
 
 } // namespace KMeans

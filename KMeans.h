@@ -27,11 +27,11 @@ namespace KMeans {
 
 	public:
 		KMeans(GLuint* VBOS);
-		DataPoint* getVertices() { return strategies[currentStrategyId]->getVertices(); };
 		int getV(){ return V; };
 		int getC(){	return C; };
 		bool isConverged(){ return converged; };
 		bool update();
+		void draw();
 		const char* getStrategyName();
 		~KMeans();
 	};

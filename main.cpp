@@ -9,7 +9,6 @@
 #include "InputHelper.h"
 #include "TextHelper.h"
 #include "KMeans.h"
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 #ifdef _WIN32
 
@@ -187,35 +186,10 @@ namespace KMeans{
 		gluLookAt(3, 2, 3, 0, 0.5, -0.5, 0, 1, 0);
 		glRotatef(camera.angleX, 1, 0, 0);   // pitch
 		glRotatef(camera.angleY, 0, 1, 0);   // heading
-		glPointSize(1);
 
 		drawAxes();
 
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBOS[0]);
-		// Set the pointers to the vertices and colors
-		glVertexPointer(3, GL_FLOAT, 16, 0);
-		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
-
-		// Enable Vertex and Color arrays
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
-		glDrawArrays(GL_POINTS, 0, kmeans->getV());
-		glDisableClientState(GL_VERTEX_ARRAY);
-
-
-		glPointSize(10);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBOS[1]);
-		// Set the pointers to the vertices and colors
-		glVertexPointer(3, GL_FLOAT, 16, 0);
-		glColorPointer(3, GL_UNSIGNED_BYTE, 16, BUFFER_OFFSET(3 * sizeof(GLfloat)));
-
-		// Enable Vertex and Color arrays
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
-		glDrawArrays(GL_POINTS, 0, kmeans->getC());
-		glDisableClientState(GL_VERTEX_ARRAY);
+		kmeans->draw();
 		
 		timer(&t3); //--------------------------------------------
 

@@ -72,4 +72,8 @@ namespace KMeans {
 			}
 		}
 	}
+
+	void UpdateStrategyCPU::draw(){
+
+	}
 }
