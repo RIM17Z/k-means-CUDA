@@ -7,7 +7,7 @@ namespace KMeans {
 
 	class UpdateStrategyCPU : public IUpdateStrategy{
 	private:
-		Pos* sums;
+		Pos *sums;
 		int *clusters_cnt;
 		bool assignPoints();
 		void sumClusters();

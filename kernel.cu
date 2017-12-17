@@ -3,11 +3,23 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "vector_types.h"
+#include <thrust/device_vector.h>
 #include <float.h>
 #include <stdio.h>
 #include "KMeansTypes.h"
 
 __device__ bool d_converged;
+
+struct sum_float4 : public thrust::binary_function<float4, float4, float4> {
+	__host__ __device__ float4 operator()(float4 x, float4 y) { return make_float4(x.x + y.x, x.y + y.y, x.z + y.z, 0.0); }
+};
+struct equal_id : public thrust::binary_function<float4, float4, bool>{
+	__host__ __device__ bool operator()(const float4 a, const float4 b) const { return *((char*)&(a.w) + 3) == *((char*)&(b.w) + 3); }
+};
+
+struct get_keys : public thrust::unary_function<float4, int>{
+	__host__ __device__ int operator()(const float4 x) { return *((char*)&(x.w) + 3); }
+};
 
 __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int C)
 {
@@ -94,6 +106,14 @@ extern "C" bool assignPoints(KMeans::DataPoint* d_vertices, KMeans::DataPoint* d
 }
 
 extern "C" void sumClusters(KMeans::DataPoint* d_vertices, KMeans::Pos* d_sums, int* d_clusters_cnt, int V, int C){
+
+	//thrust::device_ptr<float4> d_v_ptr = thrust::device_pointer_cast((float4*)d_vertices);
+	//thrust::device_ptr<float4> d_sums_ptr = thrust::device_pointer_cast(d_sums);
+	//thrust::device_ptr<int> d_sum_id_ptr = thrust::device_pointer_cast(d_sum_id);
+	//thrust::device_ptr<int> d_keys_ptr = thrust::device_pointer_cast(d_keys);
+	//thrust::equal_to<int> binary_pred;
+	//thrust::transform(d_v_ptr, d_v_ptr + V, d_keys_ptr, get_keys());
+	//thrust::reduce_by_key(d_keys_ptr, d_keys_ptr + V, d_v_ptr, d_sum_id_ptr, d_sums_ptr, binary_pred, sum_float4());
 	sumClustersKernel << < (V + 511) / 512, 512 >> >((float4*)d_vertices, (float3*)d_sums, d_clusters_cnt, V, C);
 }
 
