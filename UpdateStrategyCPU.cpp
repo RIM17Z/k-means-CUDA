@@ -112,7 +112,16 @@ namespace KMeans {
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 
-	void UpdateStrategyCPU::resetCentroids(int C, DataPoint *_centroids){
-
+	void UpdateStrategyCPU::resetCentroids(int _C, DataPoint *_centroids){
+		C = _C;
+		delete[] sums;
+		delete[] clusters_cnt;
+		sums = new Pos[C];
+		clusters_cnt = new int[C];
+		centroids = _centroids;
+	}
+	void UpdateStrategyCPU::resetVertices(int _V, DataPoint *_vertices){
+		V = _V;
+		vertices = _vertices;
 	}
 }

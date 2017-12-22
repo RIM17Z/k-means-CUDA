@@ -36,7 +36,22 @@ namespace KMeans{
 			*change = 1;
 			break;
 		case 13: // ENTER
+			*change = 'X';
+			break;
+		case GLUT_KEY_UP:
+			*change = 'U';
+			break;
+		case GLUT_KEY_DOWN:
+			*change = 'D';
+			break;
+		case GLUT_KEY_LEFT:
+			*change = 'L';
+			break;
+		case GLUT_KEY_RIGHT:
 			*change = 'R';
+			break;
+		case 'o':
+			*change = 'O';
 			break;
 		default:
 			break;

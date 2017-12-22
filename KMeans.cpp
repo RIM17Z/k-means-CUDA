@@ -39,9 +39,9 @@ namespace KMeans {
 		srand((unsigned int)time(0));
 		float cx, cy, cz;
 		int current_cluster = -1;
-		original_C = NUM_CLUSTERS;
+		original_C = C;
 		for (int i = 0; i < V; ++i) {
-			if (i % (V / NUM_CLUSTERS) == 0) {
+			if (i % (V / original_C) == 0) {
 				cx = (float)(rand() % 1000) / 1000;
 				cy = (float)(rand() % 1000) / 1000;
 				cz = (float)(rand() % 1000) / 1000;
@@ -136,6 +136,7 @@ namespace KMeans {
 		strategies[currentStrategyId]->draw();
 	}
 
+
 	void KMeans::changeStrategy() {
 		converged = false;
 		for (int i = 0; i < V; i++)
@@ -147,6 +148,53 @@ namespace KMeans {
 		if (currentStrategyId == strategies.size()) currentStrategyId = 0;
 	}
 
+	void KMeans::rerunClustering(){
+		converged = false;
+		for (int i = 0; i < V; i++)
+			vertices[i].cluster_id = 255;
+		getForgyCentroids();
+		strategies[currentStrategyId]->resetCentroids(C, centroids);
+	}
+
+	void KMeans::resetCentroids(int n){
+		C = n;
+		converged = false;
+		deleteCentroids();
+		allocateCentroids();
+		for (int i = 0; i < V; i++)
+			vertices[i].cluster_id = 255;
+		getForgyCentroids();
+		for (int i = 0; i < strategies.size(); ++i)
+			strategies[i]->resetCentroids(C, centroids);
+	}
+
+	void KMeans::increaseCentroids(){
+		resetCentroids(C + 1);
+	}
+	void KMeans::decreaseCentroids(){
+		if (C > 1) resetCentroids(C - 1);
+	}
+
+	void KMeans::resetVertices(int n){
+		V = n;
+		converged = false;
+		deleteVertices();
+		allocateVertices();
+		generate_set();
+		for (int i = 0; i < V; ++i)
+			vertices[i].cluster_id = 255;
+		getForgyCentroids();
+		for (int i = 0; i < strategies.size(); ++i)
+			strategies[i]->resetVertices(V, vertices);
+	}
+
+	void KMeans::increaseVertices(){
+		resetVertices(V*2);
+	};
+
+	void KMeans::decreaseVertices(){
+		if (V > 1) resetVertices(V/2);
+	};
 	//color space conversion
 
 	GLfloat KMeans::hue2rgb(GLfloat p, GLfloat q, GLfloat t) {

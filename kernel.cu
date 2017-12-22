@@ -1,14 +1,13 @@
 #ifndef _KERNEL_H_
 #define _KERNEL_H_
 #include "cuda_runtime.h"
+#include <helper_cuda.h>         // helper functions for CUDA error check
 #include "device_launch_parameters.h"
 #include "vector_types.h"
 #include <thrust/device_vector.h>
 #include <float.h>
 #include <stdio.h>
 #include "KMeansTypes.h"
-
-__device__ bool d_converged;
 
 struct sum_float4 : public thrust::binary_function<float4, float4, float4> {
 	__host__ __device__ float4 operator()(float4 x, float4 y) { return make_float4(x.x + y.x, x.y + y.y, x.z + y.z, 0.0); }
@@ -21,7 +20,7 @@ struct get_keys : public thrust::unary_function<float4, int>{
 	__host__ __device__ int operator()(const float4 x) { return *((char*)&(x.w) + 3); }
 };
 
-__global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int C)
+__global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int C, bool *d_converged)
 {
 	float distold = FLT_MAX;
 	__shared__ float4 s_centroids[512];
@@ -32,7 +31,7 @@ __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int
 	unsigned int idx = (blockIdx.x * blockDim.x + threadIdx.x);
 
 	if (idx == 0)
-		d_converged = true;
+		*d_converged = true;
 	
 	//TODO allocate d_centroids of size blockDim.x and fill excess with zeros
 	// then remove if clause
@@ -61,8 +60,8 @@ __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int
 			}
 		}
 		__syncthreads();
-		if (*((char*)&(p.w) + 3) != *((char*)&(s_centroids[j].w) + 3))
-			d_converged = false;
+		if (d_vertices[idx].w != s_centroids[a].w)
+			*d_converged = false;
 		d_vertices[idx].w = s_centroids[a].w;
 	}
 
@@ -99,9 +98,12 @@ __global__ void moveCentroidsKernel(float4* d_centroids, float3* d_sums, int* d_
 
 extern "C" bool assignPoints(KMeans::DataPoint* d_vertices, KMeans::DataPoint* d_centroids, int V, int C)
 {
-	bool converged = false;
-	assignKernel <<< (V + 511) / 512, 512 >>>((float4*)d_vertices, (float4*)d_centroids, V, C);
-	//cudaMemcpyFromSymbol(&converged, (void*) d_converged, sizeof(converged), 0, cudaMemcpyDeviceToHost);
+	bool converged;
+	bool *d_converged;
+	checkCudaErrors(cudaMalloc((void**)&d_converged, sizeof(bool)));
+	assignKernel << < (V + 511) / 512, 512 >> >((float4*)d_vertices, (float4*)d_centroids, V, C, d_converged);
+	checkCudaErrors(cudaMemcpy(&converged, d_converged, sizeof(bool), cudaMemcpyDeviceToHost));
+	cudaFree(d_converged);
 	return converged;
 }
 

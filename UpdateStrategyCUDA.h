@@ -24,6 +24,7 @@ namespace KMeans {
 		~UpdateStrategyCUDA();
 		const char* getStrategyName() { return "CUDA"; };
 		void resetCentroids(int _C, DataPoint *_centroids);
+		void resetVertices(int V, DataPoint *_vertices);
 		bool update();
 		void draw();
 	};
@@ -31,7 +32,6 @@ namespace KMeans {
 	extern "C" bool assignPoints(DataPoint* d_vertices, DataPoint* d_centroids, int V, int C);
 	extern "C" void sumClusters(DataPoint* d_vertices, Pos* d_sums, int* d_clusters_cnt, int V, int C);
 	extern "C" void moveCentroids(DataPoint* d_centroids, Pos* d_sums, int* d_clusters_cnt, int C);
-
 
 } // namespace KMeans
 #endif

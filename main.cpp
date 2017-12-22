@@ -87,11 +87,23 @@ namespace KMeans{
 		case 1:
 			kmeans->changeStrategy();
 			break;
+		case 'X':
+			kmeans->rerunClustering();
+			break;
+		case 'U':
+			kmeans->increaseCentroids();
+			break;
+		case 'D':
+			kmeans->decreaseCentroids();
+			break;
 		case 'R':
-			delete kmeans;
-			glDeleteBuffers(2, VBOS);
-			glGenBuffers(2, VBOS);
-			kmeans = new KMeans(VBOS);
+			kmeans->increaseVertices();
+			break;
+		case 'L':
+			kmeans->decreaseVertices();
+			break;
+		case 'O':
+			kmeans->toggleOriginalClasses();
 			break;
 		default:
 			break;
@@ -164,10 +176,26 @@ namespace KMeans{
 		text = kmeans->isConverged() ? "<<<Converged>>>" : "running...";
 		drawText(text.c_str(), 1, line);
 
+
 		line = TEXT_HEIGHT;
 		text = "Press ENTER to rerun clustering.";
 		drawText(text.c_str(), 1, line);
 
+		line += TEXT_HEIGHT;
+		text = "Press SPACE to toggle CUDA/CPU (if available).";
+		drawText(text.c_str(), 1, line);
+
+		line += TEXT_HEIGHT;
+		text = "Press LEFT/RIGHT arrow to increase/decrease number of vertices.";
+		drawText(text.c_str(), 1, line);
+
+		line += TEXT_HEIGHT;
+		text = "Press UP/DOWN arrow to increase/decrease number of clusters.";
+		drawText(text.c_str(), 1, line);
+
+		//line += TEXT_HEIGHT;
+		//text = "Press O to toggle original/calculated clusters.";
+		//drawText(text.c_str(), 1, line);
 
 		// restore projection matrix
 		glPopMatrix();                   // restore to previous projection matrix

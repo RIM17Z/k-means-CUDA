@@ -22,6 +22,8 @@ namespace KMeans {
 		void init(GLuint *VBOS);
 		void deleteVertices();
 		void deleteCentroids();
+		void resetCentroids(int n);
+		void resetVertices(int n);
 		void toRGB(GLfloat h, GLfloat s, GLfloat v, GLubyte*r, GLubyte*g, GLubyte*b);
 		GLfloat hue2rgb(GLfloat p, GLfloat q, GLfloat t);
 
@@ -34,6 +36,12 @@ namespace KMeans {
 		void draw();
 		const char* getStrategyName(); 
 		void changeStrategy();
+		void rerunClustering();
+		void increaseCentroids();
+		void decreaseCentroids();
+		void increaseVertices();
+		void decreaseVertices();
+		void toggleOriginalClasses(){};
 		~KMeans();
 	};
 

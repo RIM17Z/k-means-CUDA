@@ -15,6 +15,7 @@ namespace KMeans {
 		virtual bool update() = 0;
 		virtual void draw() = 0;
 		virtual void resetCentroids(int C, DataPoint *_centroids) = 0;
+		virtual void resetVertices(int V, DataPoint *_vertices) = 0;
 	};
 
 } // namespace KMeans
