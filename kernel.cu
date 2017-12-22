@@ -20,7 +20,9 @@ struct get_keys : public thrust::unary_function<float4, int>{
 	__host__ __device__ int operator()(const float4 x) { return *((char*)&(x.w) + 3); }
 };
 
-__global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int C, bool *d_converged)
+__device__ bool d_converged[1];
+
+__global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int C)
 {
 	float distold = FLT_MAX;
 	__shared__ float4 s_centroids[512];
@@ -31,7 +33,7 @@ __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int
 	unsigned int idx = (blockIdx.x * blockDim.x + threadIdx.x);
 
 	if (idx == 0)
-		*d_converged = true;
+		d_converged[0] = true;
 	
 	//TODO allocate d_centroids of size blockDim.x and fill excess with zeros
 	// then remove if clause
@@ -61,7 +63,7 @@ __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int
 		}
 		__syncthreads();
 		if (d_vertices[idx].w != s_centroids[a].w)
-			*d_converged = false;
+			d_converged[0] = false;
 		d_vertices[idx].w = s_centroids[a].w;
 	}
 
@@ -98,13 +100,12 @@ __global__ void moveCentroidsKernel(float4* d_centroids, float3* d_sums, int* d_
 
 extern "C" bool assignPoints(KMeans::DataPoint* d_vertices, KMeans::DataPoint* d_centroids, int V, int C)
 {
-	bool converged;
-	bool *d_converged;
-	checkCudaErrors(cudaMalloc((void**)&d_converged, sizeof(bool)));
-	assignKernel << < (V + 511) / 512, 512 >> >((float4*)d_vertices, (float4*)d_centroids, V, C, d_converged);
-	checkCudaErrors(cudaMemcpy(&converged, d_converged, sizeof(bool), cudaMemcpyDeviceToHost));
-	cudaFree(d_converged);
-	return converged;
+	bool converged[1];
+	bool *ptr_d_converged;
+	assignKernel << < (V + 511) / 512, 512 >> >((float4*)d_vertices, (float4*)d_centroids, V, C);
+	cudaGetSymbolAddress((void**)&ptr_d_converged, d_converged);
+	checkCudaErrors(cudaMemcpy(converged, ptr_d_converged, sizeof(bool), cudaMemcpyDeviceToHost));
+	return converged[0];
 }
 
 extern "C" void sumClusters(KMeans::DataPoint* d_vertices, KMeans::Pos* d_sums, int* d_clusters_cnt, int V, int C){

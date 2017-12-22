@@ -32,6 +32,7 @@ namespace KMeans {
 	extern "C" bool assignPoints(DataPoint* d_vertices, DataPoint* d_centroids, int V, int C);
 	extern "C" void sumClusters(DataPoint* d_vertices, Pos* d_sums, int* d_clusters_cnt, int V, int C);
 	extern "C" void moveCentroids(DataPoint* d_centroids, Pos* d_sums, int* d_clusters_cnt, int C);
+	extern "C" __device__ bool d_converged[1];
 
 } // namespace KMeans
 #endif

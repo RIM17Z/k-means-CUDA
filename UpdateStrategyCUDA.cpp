@@ -106,7 +106,7 @@ namespace KMeans {
 		
 		
 		//sumClusters(d_vertices, d_sums, d_clusters_cnt, V, C, d_sum_id, d_keys);
-
+		//--this part runs on CPU
 		checkCudaErrors(cudaMemcpy(
 			vertices, d_vertices, V * sizeof(DataPoint), cudaMemcpyDeviceToHost));
 		memset(sums, 0, C * sizeof(Pos));
@@ -124,7 +124,7 @@ namespace KMeans {
 			d_sums, sums, C * sizeof(DataPoint), cudaMemcpyHostToDevice));
 		checkCudaErrors(cudaMemcpy(
 			d_clusters_cnt, clusters_cnt, C * sizeof(DataPoint), cudaMemcpyHostToDevice));
-
+		//--
 
 		checkCudaErrors(cudaGetLastError());
 		checkCudaErrors(cudaDeviceSynchronize());
