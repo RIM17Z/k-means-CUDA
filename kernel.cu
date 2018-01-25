@@ -97,18 +97,18 @@ __global__ void moveCentroidsKernel(float4* d_centroids, float3* d_sums, int* d_
 		}
 	}
 }
-
-extern "C" bool assignPoints(KMeans::DataPoint* d_vertices, KMeans::DataPoint* d_centroids, int V, int C)
+//512,512
+extern "C" bool assignPoints(KMeans::DataPoint* d_vertices, KMeans::DataPoint* d_centroids, int V, int C, int grid_size, int block_size)
 {
 	bool converged[1];
 	bool *ptr_d_converged;
-	assignKernel << < (V + 511) / 512, 512 >> >((float4*)d_vertices, (float4*)d_centroids, V, C);
+	assignKernel << < (V + grid_size - 1) / grid_size, block_size >> >((float4*)d_vertices, (float4*)d_centroids, V, C);
 	cudaGetSymbolAddress((void**)&ptr_d_converged, d_converged);
 	checkCudaErrors(cudaMemcpy(converged, ptr_d_converged, sizeof(bool), cudaMemcpyDeviceToHost));
 	return converged[0];
 }
-
-extern "C" void sumClusters(KMeans::DataPoint* d_vertices, KMeans::Pos* d_sums, int* d_clusters_cnt, int V, int C){
+//512,512
+extern "C" void sumClusters(KMeans::DataPoint* d_vertices, KMeans::Pos* d_sums, int* d_clusters_cnt, int V, int C, int grid_size, int block_size){
 
 	//thrust::device_ptr<float4> d_v_ptr = thrust::device_pointer_cast((float4*)d_vertices);
 	//thrust::device_ptr<float4> d_sums_ptr = thrust::device_pointer_cast(d_sums);
@@ -117,11 +117,11 @@ extern "C" void sumClusters(KMeans::DataPoint* d_vertices, KMeans::Pos* d_sums, 
 	//thrust::equal_to<int> binary_pred;
 	//thrust::transform(d_v_ptr, d_v_ptr + V, d_keys_ptr, get_keys());
 	//thrust::reduce_by_key(d_keys_ptr, d_keys_ptr + V, d_v_ptr, d_sum_id_ptr, d_sums_ptr, binary_pred, sum_float4());
-	sumClustersKernel << < (V + 511) / 512, 512 >> >((float4*)d_vertices, (float3*)d_sums, d_clusters_cnt, V, C);
+	sumClustersKernel << < (V + grid_size - 1) / grid_size, block_size >> >((float4*)d_vertices, (float3*)d_sums, d_clusters_cnt, V, C);
 }
-
-extern "C" void moveCentroids(KMeans::DataPoint* d_centroids, KMeans::Pos* d_sums, int* d_clusters_cnt, int C)
+//256,256
+extern "C" void moveCentroids(KMeans::DataPoint* d_centroids, KMeans::Pos* d_sums, int* d_clusters_cnt, int C, int grid_size, int block_size)
 {
-	moveCentroidsKernel << < (C + 255) / 256, 256 >> >((float4*)d_centroids, (float3*)d_sums, d_clusters_cnt, C);
+	moveCentroidsKernel << < (C + grid_size - 1) / grid_size, block_size >> >((float4*)d_centroids, (float3*)d_sums, d_clusters_cnt, C);
 }
 #endif // #ifndef _KERNEL_H_

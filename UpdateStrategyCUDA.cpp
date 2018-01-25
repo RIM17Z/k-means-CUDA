@@ -18,76 +18,74 @@ namespace KMeans {
 	UpdateStrategyCUDA::UpdateStrategyCUDA(int _V, int _C, DataPoint *_vertices, DataPoint *_centroids, GLuint *_VBO, GLuint *_VBO2) : IUpdateStrategy(_V, _C, _vertices, _centroids, _VBO, _VBO2) {
 		sums = new Pos[C];
 		clusters_cnt = new int[C];
-
 		checkCudaErrors(cudaSetDevice(0));
-
-		glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-		glBufferData(GL_ARRAY_BUFFER, V * 4 * sizeof(float), 0,
-			GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, *VBO2);
-		glBufferData(GL_ARRAY_BUFFER, C * 4 * sizeof(float), 0,
-			GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		allocateVerticesCuda();
 		allocateCentroidsCuda();
 
-		// register this buffer object with CUDA
-		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resources[0], *VBO, cudaGraphicsRegisterFlagsNone));
-		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resources[1], *VBO2, cudaGraphicsRegisterFlagsNone));
-
-		checkCudaErrors(cudaGraphicsMapResources(2, cuda_vbo_resources, 0));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_vertices, NULL,
-			cuda_vbo_resources[0]));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_centroids, NULL,
-			cuda_vbo_resources[1]));
 		copyVerticesToCuda();
 		copyCentroidsToCuda();
 
-		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
 	}
 
 	UpdateStrategyCUDA::~UpdateStrategyCUDA(){
 		delete[] sums;
 		delete[] clusters_cnt;
 		checkCudaErrors(cudaDeviceSynchronize());
-		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resources[0]));
-		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resources[1]));
 		deleteCentroids();
 		deleteVertices();
 	}
 
 	void UpdateStrategyCUDA::allocateVerticesCuda(){
-		//checkCudaErrors(cudaMalloc((void**)&d_vertices, V * sizeof(DataPoint)));
+		glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+		glBufferData(GL_ARRAY_BUFFER, V * 4 * sizeof(float), 0,
+			GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// register this buffer object with CUDA
+		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resources[0], *VBO, cudaGraphicsRegisterFlagsNone));
+
 	} 
 	
 	void UpdateStrategyCUDA::allocateCentroidsCuda(){
-		//checkCudaErrors(cudaMalloc((void**)&d_centroids, C * sizeof(DataPoint)));
 		checkCudaErrors(cudaMalloc((void**)&d_sums, V * sizeof(float4)));
 		checkCudaErrors(cudaMalloc((void**)&d_clusters_cnt, V * sizeof(int)));
+		glBindBuffer(GL_ARRAY_BUFFER, *VBO2);
+		glBufferData(GL_ARRAY_BUFFER, C * 4 * sizeof(float), 0,
+			GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		// register this buffer object with CUDA
+		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resources[1], *VBO2, cudaGraphicsRegisterFlagsNone));
 	}
 
 	void UpdateStrategyCUDA::copyVerticesToCuda(){
+		checkCudaErrors(cudaGraphicsMapResources(2, cuda_vbo_resources, 0));
+		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_vertices, NULL,
+			cuda_vbo_resources[0]));
 		checkCudaErrors(cudaMemcpy(
 			d_vertices, vertices, V * sizeof(DataPoint), cudaMemcpyHostToDevice));
+		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
 
 	}
 
 	void UpdateStrategyCUDA::copyCentroidsToCuda(){
+		checkCudaErrors(cudaGraphicsMapResources(2, cuda_vbo_resources, 0));
+		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_centroids, NULL,
+			cuda_vbo_resources[1]));
 		checkCudaErrors(cudaMemcpy(
 			d_centroids, centroids, C * sizeof(DataPoint), cudaMemcpyHostToDevice));
+		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
 	}
 
 	void UpdateStrategyCUDA::deleteVertices(){
 		cudaDeviceSynchronize();
-		//cudaFree(d_vertices);
+		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resources[0]));
 	}
 
 	void UpdateStrategyCUDA::deleteCentroids(){
 		cudaDeviceSynchronize();
-		//cudaFree(d_centroids);
 		cudaFree(d_sums);
 		cudaFree(d_clusters_cnt);
+		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resources[1]));
 	}
 
 	bool UpdateStrategyCUDA::update(){
@@ -96,7 +94,7 @@ namespace KMeans {
 			cuda_vbo_resources[0]));
 		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_centroids, NULL,
 			cuda_vbo_resources[1]));
-		bool converged = assignPoints(d_vertices, d_centroids, V, C);
+		bool converged = assignPoints(d_vertices, d_centroids, V, C, 512, 512);
 		checkCudaErrors(cudaGetLastError());
 		checkCudaErrors(cudaMemset(d_sums, 0x0, C * sizeof(Pos)));
 		checkCudaErrors(cudaGetLastError());
@@ -105,7 +103,7 @@ namespace KMeans {
 		checkCudaErrors(cudaDeviceSynchronize());
 		
 		
-		//sumClusters(d_vertices, d_sums, d_clusters_cnt, V, C, d_sum_id, d_keys);
+		//sumClusters(d_vertices, d_sums, d_clusters_cnt, V, C, d_sum_id, d_keys, 512, 512);
 		//--this part runs on CPU
 		checkCudaErrors(cudaMemcpy(
 			vertices, d_vertices, V * sizeof(DataPoint), cudaMemcpyDeviceToHost));
@@ -128,7 +126,7 @@ namespace KMeans {
 
 		checkCudaErrors(cudaGetLastError());
 		checkCudaErrors(cudaDeviceSynchronize());
-		moveCentroids(d_centroids, d_sums, d_clusters_cnt, C);
+		moveCentroids(d_centroids, d_sums, d_clusters_cnt, C, 256, 256);
 		checkCudaErrors(cudaGetLastError());
 		checkCudaErrors(cudaDeviceSynchronize());
 		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
@@ -166,53 +164,24 @@ namespace KMeans {
 
 	void UpdateStrategyCUDA::resetCentroids(int _C, DataPoint *_centroids){
 		deleteCentroids();
-		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resources[1]));
 		C = _C;
 		centroids = _centroids;
 		sums = new Pos[C];
 		clusters_cnt = new int[C];
 
-		glBindBuffer(GL_ARRAY_BUFFER, *VBO2);
-		glBufferData(GL_ARRAY_BUFFER, C * 4 * sizeof(float), 0,
-			GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 		allocateCentroidsCuda();
-		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resources[1], *VBO2, cudaGraphicsRegisterFlagsNone));
-
-		// register this buffer object with CUDA
-		checkCudaErrors(cudaGraphicsMapResources(2, cuda_vbo_resources, 0));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_vertices, NULL,
-			cuda_vbo_resources[0]));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_centroids, NULL,
-			cuda_vbo_resources[1]));
 		copyCentroidsToCuda();
 		copyVerticesToCuda();
-		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
 
 	}
 
 	void UpdateStrategyCUDA::resetVertices(int _V, DataPoint *_vertices){
-		checkCudaErrors(cudaGraphicsUnregisterResource(cuda_vbo_resources[0]));
+		deleteVertices();
 		V = _V;
 		vertices = _vertices;
 
-		glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-		glBufferData(GL_ARRAY_BUFFER, V * 4 * sizeof(float), 0,
-			GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_vbo_resources[0], *VBO, cudaGraphicsRegisterFlagsNone));
-
-		// register this buffer object with CUDA
-		checkCudaErrors(cudaGraphicsMapResources(2, cuda_vbo_resources, 0));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_vertices, NULL,
-			cuda_vbo_resources[0]));
-		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_centroids, NULL,
-			cuda_vbo_resources[1]));
+		allocateVerticesCuda();
 		copyCentroidsToCuda();
 		copyVerticesToCuda();
-		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
-
 	}
 }
