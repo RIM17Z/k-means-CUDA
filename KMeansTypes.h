@@ -1,6 +1,9 @@
 #ifndef KMEANSTYPES_H_
 #define KMEANSTYPES_H_
 #include <GL/freeglut.h>
+
+#define MAX_CLUSTERS_CNT 512
+
 namespace KMeans {
 
 	typedef struct Camera{

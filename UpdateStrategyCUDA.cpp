@@ -50,7 +50,7 @@ namespace KMeans {
 		checkCudaErrors(cudaMalloc((void**)&d_sums, V * sizeof(float4)));
 		checkCudaErrors(cudaMalloc((void**)&d_clusters_cnt, V * sizeof(int)));
 		glBindBuffer(GL_ARRAY_BUFFER, *VBO2);
-		glBufferData(GL_ARRAY_BUFFER, C * 4 * sizeof(float), 0,
+		glBufferData(GL_ARRAY_BUFFER, MAX_CLUSTERS_CNT * 4 * sizeof(float), 0,
 			GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		// register this buffer object with CUDA
@@ -71,6 +71,7 @@ namespace KMeans {
 		checkCudaErrors(cudaGraphicsMapResources(2, cuda_vbo_resources, 0));
 		checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_centroids, NULL,
 			cuda_vbo_resources[1]));
+		checkCudaErrors(cudaMemset(d_centroids, 0x0, MAX_CLUSTERS_CNT * 4 * sizeof(float)));
 		checkCudaErrors(cudaMemcpy(
 			d_centroids, centroids, C * sizeof(DataPoint), cudaMemcpyHostToDevice));
 		checkCudaErrors(cudaGraphicsUnmapResources(2, cuda_vbo_resources, 0));
@@ -103,8 +104,9 @@ namespace KMeans {
 		checkCudaErrors(cudaDeviceSynchronize());
 		
 		
-		//sumClusters(d_vertices, d_sums, d_clusters_cnt, V, C, d_sum_id, d_keys, 512, 512);
+		sumClusters(d_vertices, d_sums, d_clusters_cnt, V, C, 512, 512);
 		//--this part runs on CPU
+		/*
 		checkCudaErrors(cudaMemcpy(
 			vertices, d_vertices, V * sizeof(DataPoint), cudaMemcpyDeviceToHost));
 		memset(sums, 0, C * sizeof(Pos));
@@ -122,6 +124,7 @@ namespace KMeans {
 			d_sums, sums, C * sizeof(DataPoint), cudaMemcpyHostToDevice));
 		checkCudaErrors(cudaMemcpy(
 			d_clusters_cnt, clusters_cnt, C * sizeof(DataPoint), cudaMemcpyHostToDevice));
+		*/
 		//--
 
 		checkCudaErrors(cudaGetLastError());

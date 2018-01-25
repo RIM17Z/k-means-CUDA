@@ -25,7 +25,7 @@ __device__ bool d_converged[1];
 __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int C)
 {
 	float distold = FLT_MAX;
-	__shared__ float4 s_centroids[512];
+	__shared__ float4 s_centroids[MAX_CLUSTERS_CNT];
 	float4 p;
 	unsigned int a = 0;
 	unsigned int j;
@@ -35,22 +35,13 @@ __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int
 	if (idx == 0)
 		d_converged[0] = true;
 	
-	//TODO allocate d_centroids of size blockDim.x and fill excess with zeros
-	// then remove if clause
-	if (threadIdx.x < C)
-		s_centroids[threadIdx.x] = d_centroids[threadIdx.x];
-	else
-		s_centroids[threadIdx.x] = make_float4(0.0, 0.0, 0.0, 0.0);
-
-	// TODO same as for centroids
-	if (idx < V)
-		p = d_vertices[idx];
-	else
-		p = make_float4(0.0, 0.0, 0.0, 0.0);
+	s_centroids[threadIdx.x] = d_centroids[threadIdx.x];
 
 	__syncthreads();
 
 	if (idx < V){
+		p = d_vertices[idx];
+
 		for (j = 0; j < C; j++){
 			float tmp_x = s_centroids[j].x - p.x;
 			float tmp_y = s_centroids[j].y - p.y;
@@ -61,8 +52,8 @@ __global__ void assignKernel(float4* d_vertices, float4* d_centroids, int V, int
 				distold = distnew;
 			}
 		}
-		__syncthreads();
-		if (d_vertices[idx].w != s_centroids[a].w)
+		//__syncthreads();
+		if (p.w != s_centroids[a].w)
 			d_converged[0] = false;
 		d_vertices[idx].w = s_centroids[a].w;
 	}
@@ -109,14 +100,15 @@ extern "C" bool assignPoints(KMeans::DataPoint* d_vertices, KMeans::DataPoint* d
 }
 //512,512
 extern "C" void sumClusters(KMeans::DataPoint* d_vertices, KMeans::Pos* d_sums, int* d_clusters_cnt, int V, int C, int grid_size, int block_size){
-
-	//thrust::device_ptr<float4> d_v_ptr = thrust::device_pointer_cast((float4*)d_vertices);
-	//thrust::device_ptr<float4> d_sums_ptr = thrust::device_pointer_cast(d_sums);
-	//thrust::device_ptr<int> d_sum_id_ptr = thrust::device_pointer_cast(d_sum_id);
-	//thrust::device_ptr<int> d_keys_ptr = thrust::device_pointer_cast(d_keys);
-	//thrust::equal_to<int> binary_pred;
-	//thrust::transform(d_v_ptr, d_v_ptr + V, d_keys_ptr, get_keys());
-	//thrust::reduce_by_key(d_keys_ptr, d_keys_ptr + V, d_v_ptr, d_sum_id_ptr, d_sums_ptr, binary_pred, sum_float4());
+	/*
+	thrust::device_ptr<float4> d_v_ptr = thrust::device_pointer_cast((float4*)d_vertices);
+	thrust::device_ptr<float3> d_sums_ptr = thrust::device_pointer_cast((float4*)d_sums);
+	thrust::device_ptr<int> d_sum_id_ptr = thrust::device_pointer_cast(d_sum_id);
+	thrust::device_ptr<int> d_keys_ptr = thrust::device_pointer_cast(d_keys);
+	thrust::equal_to<int> binary_pred;
+	thrust::transform(d_v_ptr, d_v_ptr + V, d_keys_ptr, get_keys());
+	thrust::reduce_by_key(d_keys_ptr, d_keys_ptr + V, d_v_ptr, d_sum_id_ptr, d_sums_ptr, binary_pred, sum_float4());
+	*/
 	sumClustersKernel << < (V + grid_size - 1) / grid_size, block_size >> >((float4*)d_vertices, (float3*)d_sums, d_clusters_cnt, V, C);
 }
 //256,256
